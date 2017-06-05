@@ -1,1 +1,9 @@
+1. Datos de germinación en camara e invernadero (2015).
+Tenemos una base de datos bruta en formato Excel (DATOS GERMINACION CAMARA 2015_ordenados.xlsx, Germinacion_agrupada.txt). 
+Utilizando esta base de datos bruta, en el 2015 se individualizaron cada una de las semillas y se codificaron con 0 (no germinada) y 1 (germinada).
+Esta información individualizada, limpia y codificada por poblacioón, madre/padre y tipo de cruce esta en el el archivo (Germinacion_individualizada.txt).
 
+2. Datos germinación campo (2015).
+Base de datos bruta (seguimiento_verano_2015_carlos_javi.xls y geneflow_field_experiment.txt). Los datos totales han de tener 4 censos.
+Base de datos de el munero de clavo identificando el tipo de cruce, madre/padre, bloque y numero de semillas en cada clavo (datos_germinacion_clavocampo.xls y tambien geneflow_field_experiment_KEY.txt).
+Con el script de R que creo Carlos (S_geneflow_field_experiment.R) se tratan los datos para que estén individualizados y con código de cruce.
