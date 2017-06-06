@@ -7,3 +7,37 @@ Esta información individualizada, limpia y codificada por poblacioón, madre/pa
 Base de datos bruta (seguimiento_verano_2015_carlos_javi.xls y geneflow_field_experiment.txt). Los datos totales han de tener 4 censos.
 Base de datos de el munero de clavo identificando el tipo de cruce, madre/padre, bloque y numero de semillas en cada clavo (datos_germinacion_clavocampo.xls y tambien geneflow_field_experiment_KEY.txt).
 Con el script de R que creo Carlos (S_geneflow_field_experiment.R) se tratan los datos para que estén individualizados y con código de cruce.
+
+
+#PREPARACION DATOS (S_geneflow_fieldexperiment.R):
+1. Juntar info clavo (key) con info campo.
+En este paso juntamos la info del numero de clavo, madre y padre y numero de semillas que se pusieron a germinar con la informaci'on recogida en campo.
+Variable 'code'= bloque-clavo
+Tambi'en se ha codificado el tipo de cruce (F1 to F5) y la montaña (ligar de siembra).
+
+1. Preparar datos para análisis germinación.
+Unión data.frames key(clavo, madre, padre, numero semillas) con los datos de campo = nuevo data grame 'ger'. Comprobamos algunos cruces visualmente con los excel originales.
+Se crea un campo nuevo 'code2' codificado con numerodebloque_numeroclavo_posiciónsemilla. Con esto ya sabemos concretamente donde está cada seedling.
+Guadarrama  Mor: Bloqe 1 al 4
+            Naj: Bloque 5 al 8
+Bejar       Rui: Bloque 9 al 12
+            Agi Bloque 13 al 16
+Gredos
+            Cam: Bloque 17 y 18 (perdimos 2)
+            Ses: Bloques 19 y 20 (perdimos 2)
+Añadimos el codigo 'code2' a 'ger' y creamos 'ger2' con el que haremos los análisis de germinación. 
+Se van haciendo subsets de datos según cada tiempo (T1 to T4).
+Con los subsets por tiempo se hacen comparaciones para detectar cuando se han producido germinaciones y mortalidades en cada paso de tiempos.
+
+ATENCION!!!!!!!!!!!
+DETECTAMOS DUPLICADO DE DATOS EN 26 CASOS DEBIDO A FALLOS DE TOMA DE DATOS EN CAMPO DE NUMERO DEL CLAVO
+SEGUIMOS QUITANDO ESTOS CASOS, EN MADRID CON LOS ESTADILLOS DE CAMPO PUEDE RECUPERARSE LA INFORMACIÓN (estadillos clavo para mirar el orden y estadillos sabana germinación)
+
+Creamos un data frame que auna todas las semillas que han germinado tentiendo en cuenta los 4 tiempo (codigo). 
+En este data frame está la información para trabajar con germinación.
+
+ATENCION!!!!!!!!!!
+DETECTAMOS DUPLICADOS DE SEMILLAS CON MISMA POSICION, DENTRO DEL MISMO CLAVO, EL EL MISMO BLOQUE Y EN EL MISMO TIEMPO.
+MIRAMOS LOS DATOS Y LAS MEDIDAS SON IGUALES. ASUMIMOS FALLO AL PASAR LOS DATOS.
+NOS QUEDAMOS CON UN DATO DE CADA PAREJA DE DUPLICADOS.
+NOS QUEDAMOS SOLO CON UNO DE LOS DOS CON LA FUNCION 'duplicate' que selecciona uno al azar (quitamos 51)
