@@ -32,12 +32,32 @@ Con los subsets por tiempo se hacen comparaciones para detectar cuando se han pr
 ATENCION!!!!!!!!!!!
 DETECTAMOS DUPLICADO DE DATOS EN 26 CASOS DEBIDO A FALLOS DE TOMA DE DATOS EN CAMPO DE NUMERO DEL CLAVO
 SEGUIMOS QUITANDO ESTOS CASOS, EN MADRID CON LOS ESTADILLOS DE CAMPO PUEDE RECUPERARSE LA INFORMACIÓN (estadillos clavo para mirar el orden y estadillos sabana germinación)
+field=4822, field2=4713
 
-Creamos un data frame que auna todas las semillas que han germinado tentiendo en cuenta los 4 tiempo (codigo). 
-En este data frame está la información para trabajar con germinación.
 
 ATENCION!!!!!!!!!!
 DETECTAMOS DUPLICADOS DE SEMILLAS CON MISMA POSICION, DENTRO DEL MISMO CLAVO, EL EL MISMO BLOQUE Y EN EL MISMO TIEMPO.
 MIRAMOS LOS DATOS Y LAS MEDIDAS SON IGUALES. ASUMIMOS FALLO AL PASAR LOS DATOS.
 NOS QUEDAMOS CON UN DATO DE CADA PAREJA DE DUPLICADOS.
 NOS QUEDAMOS SOLO CON UNO DE LOS DOS CON LA FUNCION 'duplicate' que selecciona uno al azar (quitamos 51)
+field2=4713, field3=4662
+field3:     code2 es bloque_clavo_posicion 
+            code3 es bloque_clavo_posicion_tiempo
+Con el data set ya limpio de duplicados y con los códigos bien puestos pasamos a hacer los subsets y a calcular la germinación real
+Creamos base de datos 'ger' a partir de 'field3'
+
+Creamos un data frame que auna todas las semillas que han germinado tentiendo en cuenta los 4 tiempo (codigo). 
+ger=2990 (semillas germinadas en T1+germinadasT2+germinadasT3+germinadasT4) (code2 no puede tener duplicados)
+
+Creamos ger2 (ger.sum), que es el numero de semillas germinadas en todos los tiempos por clavo. 
+ger2 = 967 clavos con germinacion a lo largo de la temporada
+calculamos con el numero de semillas inicial (info columnas seeds, ger2) el numero de semillas no germinadas 
+y creamos una nueva columna con esta info (no.ger)
+calculamos tambien la proporcion de semillas germinadas (p.ger)
+
+#################### mirar si hay algun bloque que sería mejor quitar porque pasaron catastrofes (Bloque3 y Bloque8... de guadarrama)
+#################### ya hemos quitado algunos (dos de ses y otros dos de cam). No se si compensa porque en todos germina algo....
+
+
+
+
