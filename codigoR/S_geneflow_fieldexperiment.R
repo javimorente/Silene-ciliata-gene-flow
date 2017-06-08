@@ -1,10 +1,15 @@
 
 rm(list=ls())
 library(lme4)
+install.packages("doBy")
 library(doBy)
+install.packages("MuMIn")
 library(MuMIn)
+install.packages("lsmeans")
 library(lsmeans)
+install.packages("influence.ME")
 library(influence.ME)
+install.packages("multcomp")
 library(multcomp)
 
 #logit <- function(x){log(x/(1-x))} #link function logit.
@@ -15,8 +20,9 @@ library(multcomp)
 
 ##############################
 ######## 1.1 Raw data ########
-setwd("C:/Users/carlos/Documents/SCIENCE/PROYECTOS/ADAPTA/geneflow_experiment")
-                            
+path<-"C:/Users/javim/Desktop/Silene ciliata gene flow/Silene-ciliata-gene-flow-master"
+setwd(path)
+
 field=read.table("geneflow_field_experiment.txt", header=T, sep="\t")
 str(field)
 
@@ -308,25 +314,70 @@ t4.3.conditional=t4[,1] %in% t3[,1]
 t4.conditional<-ifelse(t4.1.conditional=="FALSE" & t4.2.conditional=="FALSE" & t4.3.conditional=="FALSE","FALSE","TRUE") #FALSE = Germination in T4 (no ger/no ger/no ger/germinado), TRUE==Superv T4 (germinado en T1 o T2 o T3 y vivo T4)
 t4=data.frame(t4, conditional=t4.conditional)
 
-ger<-rbind(t1,subset(t2, conditional=="FALSE"),subset(t3, conditional=="FALSE"),subset(t4, conditional=="FALSE") )  #Dataframe con todas las semillas germinadas y el censo (Time)en el que lo hicieron.
+ger<-rbind(t1,subset(t2, conditional=="FALSE"),subset(t3, conditional=="FALSE"),subset(t4, conditional=="FALSE") )  
+#####Dataframe con todas las semillas germinadas y el censo (Time) en el que lo hicieron.
 
-ger.sum=aggregate(class~code, data=ger, FUN=sum)
+ger.sum=aggregate(class~code, data=ger, FUN=sum) #suma germinadas por clavo
 colnames(ger.sum)=c("code","n.ger")
 ger2= merge(key,ger.sum, by="code", sort = TRUE)
 nrow(ger2) #967 clavos con germinación
 length(which(!duplicated(ger$code)=="TRUE"))  #Compruebe que coincide con base de datos ger (code no duplicados es 967)
-no.ger<-ger2$seeds-ger2$n.ger
-p.ger=ger2$n.ger/ger2$seeds
+no.ger<-ger2$seeds-ger2$n.ger #calculo semillas no germinadas
+p.ger=ger2$n.ger/ger2$seeds #calculo proporcion gernminadas
 ger2=data.frame(ger2,no.ger,p.ger)
+ger2<-droplevels(ger2)
+nrow(ger2)
 
 #ger2=subset(ger2, c(blo!="B3" | blo!="B8"))    #Eliminar bloque 3 y bloque 8
-
 #ger3<-subset(ger2, subset= c(treat=="F1" | treat== "F2" | treat=="F3"))   #Seleccionar tratamientos F1, F2, F3
 
 ger3<-subset(ger2, subset= c(treat!="F4" & treat!= "F5" )) # Extraer tratamientos F4 y F5
 ger3<-droplevels(ger3) #Limpiar de la memoria de R los niveles que has eliminado con subset
 
+###########Crear y  Unir unacolumna con el tamaño de la madre.
 
+setwd('C:/Users/javim/Desktop/Silene ciliata gene flow')
+size<-read.table('Matriz _general_fenologia_2014.txt', header=T)
+tail(size)
+head(size)
+
+size$poblacion
+levels(size$poblacion)[1] = "agi"
+levels(size$poblacion)[2] = "cam"
+levels(size$poblacion)[3] = "mor"
+levels(size$poblacion)[4] = "naj"
+levels(size$poblacion)[5] = "neg"
+levels(size$poblacion)[6] = "pen"
+levels(size$poblacion)[7] = "rui"
+levels(size$poblacion)[8] = "ses"
+levels(size$poblacion)[9] = "zon"
+
+size$code = paste(size$poblacion, size$madre, sep=" ")
+head(size)
+
+size_madre<-subset(size,select=c(code, poblacion, madre, sierra, size))
+head(size_madre) 
+str(size_madre)#720 datos
+#quitamos NA's
+size_madre_noNA <- na.omit(size_madre) #encontramos 20, se quedan en 700 datos
+str(size_madre_noNA)
+#quitamos duplicados haciendo la media entre ellos.
+size_madre_cleen=aggregate(size~code, size_madre_noNA, FUN=mean) #quitamos 375, se queda en 325 datos
+str(size_madre_cleen)
+head(size_madre_cleen)
+#guardamos la tabla.
+write.table(size_madre_cleen, file='size_madre_cleened.txt', col.names = TRUE)
+size_madre <- read.table("size_madre_cleened.txt", header = T)
+
+names(size_madre)[1]<-paste("mother")#renombramos igual a la columna para que se entiendan.
+head(size_madre)
+head(ger3)
+
+ger4= merge(ger3,size_madre, by="mother", all.x = T)
+head(ger4[,(13:15)]) 
+ger4=(ger4[,-(13:15)]) #quitamos columnas que no necesitamos. ger4 = ger3 pero con size
+
+#######################################################################################################################
 #####Distribution of data within populations
 
 library(doBy)
@@ -502,20 +553,57 @@ boxplot(predict.avg~ger3$trea)
 ###################################
 ######## 3.1 Data managing ########
 
-###Estimar número de plantulas vivas y muertas en T2 respecto a T1 por cada clavo
+###Estimar número de plantulas vivas de T1 en t2 y t3, de T2 en t3 y t4, de T3 en T4 
+###utilizamos la agrupación previa de germinaciones nuevas por tiempo agrupadas en ger para calcular esto
 
-vivo=ifelse(t1$conditional=="TRUE",1,0)
-t1=data.frame(t1,vivo)
-ger.0= aggregate(class~code,t1,sum)
-vivo=aggregate(vivo~code, t1, sum)
-death=ger.0$class-vivo$vivo
-survival.prop=vivo$vivo/ger.0$class
-head(survival.prop)
+#plantulas presentes a cada tiempo
+t1=subset(field3, time==1)
+t2=subset(field3, time==2)
+t3=subset(field3, time==3)
+t4=subset(field3, time==4)
+#nuevas plantulas germinadas a cada tiempo
+g.t1=subset(ger, time==1)
+g.t2=subset(ger, time==2)
+g.t3=subset(ger, time==3)
+g.t4=subset(ger, time==4)
 
-survival=data.frame(ger.0, vivo=vivo[,2], death,survival.prop)
+#germinadas en el tiempo1
+  #vivas en T2
+sup11.conditional=g.t1[,1] %in% t2[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup11=data.frame(g.t1, conditional=sup11.conditional)
+  #vivas en T3
+sup12.conditional=g.t1[,1] %in% t3[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup12=data.frame(g.t1, conditional=sup12.conditional)
+  #vivas en T4
+sup13.conditional=g.t1[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup13=data.frame(g.t1, conditional=sup13.conditional)
 
-survival=merge(survival,key, by="code", all=FALSE)
-survival=subset(survival, c(blo!="B3" & blo!="B8" ))
+#germinadas en el tiempo2 
+  #vivas en T3
+sup21.conditional=g.t2[,1] %in% t3[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup21=data.frame(g.t2, conditional=sup21.conditional)
+  #vivas en T4
+sup22.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup22=data.frame(g.t2, conditional=sup22.conditional)
+
+#germinadas tiempo 3 
+  #vivas en T4
+sup31.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
+sup31=data.frame(g.t2, conditional=sup31.conditional)
+
+#de carlos.
+#vivo=ifelse(t1$conditional=="TRUE",1,0)
+#t1=data.frame(t1,vivo)
+#ger.0= aggregate(class~code,t1,sum)
+#vivo=aggregate(vivo~code, t1, sum)
+#death=ger.0$class-vivo$vivo
+#survival.prop=vivo$vivo/ger.0$class
+#head(survival.prop)
+
+#survival=data.frame(ger.0, vivo=vivo[,2], death,survival.prop)
+
+#survival=merge(survival,key, by="code", all=FALSE)
+#survival=subset(survival, c(blo!="B3" & blo!="B8" ))
 
 ###################################
 ######## 3.2 Plot Survival ########
@@ -612,14 +700,16 @@ summary(dunnet.surv)
 ###################################
 ######## 4.1 Data managing ########
 
-size=aggregate(size~code*pos, ger, max)
-code2=paste(size$code,size$pos,sep="_")
-str(code2)
-size=data.frame(code2,size)
-head(size)
-size=merge(size,key, by="code", all=FALSE)
-size=subset(size, c(blo!="B3" & blo!="B8"))
-
+size=aggregate(size~code2*pos, field3, FUN=max) 
+size=aggregate(size~code2, field3, FUN=max) #hace lo mismo, ya que code2 ya contiene la posicion
+#tamaño de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
+#queremos obtener el tamaño maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
+head(size) #mismo numero de obs que ger, tiene sentido, ger = numero de germinaciones total en todos los tiempos.
+size=merge(size,ger([-11]), by="code2", all=FALSE)
+#unimos a ger para que tenga toda la información de cada caso, quitamos tamaño semillas en tiempo de su germinación
+#size=subset(size, c(blo!="B3" & blo!="B8"))
+size=size[-17]
+size<-subset(size, subset= c(treat!="F4" & treat!= "F5" ))   #quitamos F4 y F5
 boxplot(size$size~size$treat, ylab="size (mm)")
 
 ###################################
