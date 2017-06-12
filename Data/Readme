@@ -59,11 +59,12 @@ Creamos ger3 quitando los tratamientos F4 y F5 por el momento del análisis.
 #################### mirar si hay algun bloque que sería mejor quitar porque pasaron catastrofes (Bloque3 y Bloque8... de guadarrama)
 #################### ya hemos quitado algunos (dos de ses y otros dos de cam). No se si compensa porque en todos germina algo....
 New variables
-#################### crear variable de tabaño de la madre
+#################### crear covariable de tabaño de la madre
 #################### crear base de datos con tamaño máximo que alcanza cada plantula
 #################### crear base de datos de supervivencia y/o mortalidad.
+
 Creamos ger4 que en como ger3 con una columna extra referida al tamaño de la madre
 Base de datos size contiene el tamaño maximo de cada plantula germinada. La creamos a partir de field3. 
             Mismo numero de casos que ger2 ya que solo tenemos en cuenta un valor de tamaño por cada tiempo. Quitamos F4 y F5.
-
-
+Se h creado una base de datos de supervivencia con la comparación de plántulas vivas a diferentes tiempos. 
+Comparamos las germinadas en T1 si siguen vivas en T2, T3 y T4. Así sucesibamente para T2 y T3.
