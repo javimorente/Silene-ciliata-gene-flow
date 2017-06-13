@@ -30,7 +30,7 @@ str(key)
 
 code=paste(key$blo,key$nail, sep = "_")
 key<-cbind(key,code)
-key<-key[!(duplicated(key$code)| duplicated(key$code, fromLast=TRUE)) ,] #26 casos duplicados error toma datos clavo. Cuando se resuelva borrar esta línea de codigo 
+key<-key[!(duplicated(key$code)| duplicated(key$code, fromLast=TRUE)) ,] #26 casos duplicados error toma datos clavo. Cuando se resuelva borrar esta lÃ­nea de codigo 
            
 code=paste(field$blo,field$nail, sep = "_")
 field=data.frame(code,field)
@@ -53,7 +53,7 @@ vec=rep("F2", nrow(naj.F))
 naj.F2=data.frame(naj.F,treat=vec)
 
 #F3
-naj.F <- naj[grep("peñ", naj$father), ]
+naj.F <- naj[grep("peÃ±", naj$father), ]
 vec=rep("F3", nrow(naj.F))
 naj.F3=data.frame(naj.F,treat=vec)
 
@@ -87,7 +87,7 @@ vec=rep("F2", nrow(mor.F))
 mor.F2=data.frame(mor.F,treat=vec)
 
 #F3
-mor.F <- mor[grep("peñ", mor$father), ]
+mor.F <- mor[grep("peÃ±", mor$father), ]
 vec=rep("F3", nrow(mor.F))
 mor.F3=data.frame(mor.F,treat=vec)
 
@@ -134,7 +134,7 @@ vec=rep("F4", nrow(rui.F))
 rui.F4=data.frame(rui.F,treat=vec)
 
 #F5
-rui.F <- rui[grep("peñ", rui$father), ] 
+rui.F <- rui[grep("peÃ±", rui$father), ] 
                
 vec=rep("F5", nrow(rui.F))
 rui.F5=data.frame(rui.F,treat=vec)
@@ -169,7 +169,7 @@ agi.F4=data.frame(agi.F,treat=vec)
 
 #F5
 agi.F <- rbind ( 
-    (agi[grep("peñ", agi$father), ]), (agi[grep("zon", agi$father), ]) 
+    (agi[grep("peÃ±", agi$father), ]), (agi[grep("zon", agi$father), ]) 
                 )
                
 vec=rep("F5", nrow(agi.F))
@@ -204,7 +204,7 @@ vec=rep("F4", nrow(ses.F))
 ses.F4=data.frame(ses.F,treat=vec)
 
 #F5
-ses.F <- ses[grep("peñ", ses$father), ] 
+ses.F <- ses[grep("peÃ±", ses$father), ] 
                
 vec=rep("F5", nrow(ses.F))
 ses.F5=data.frame(ses.F,treat=vec)
@@ -238,7 +238,7 @@ vec=rep("F4", nrow(cam.F))
 cam.F4=data.frame(cam.F,treat=vec)
 
 #F5
-cam.F <- cam[grep("peñ", cam$father), ] 
+cam.F <- cam[grep("peÃ±", cam$father), ] 
                
 vec=rep("F5", nrow(cam.F))
 cam.F5=data.frame(cam.F,treat=vec)
@@ -320,7 +320,7 @@ ger<-rbind(t1,subset(t2, conditional=="FALSE"),subset(t3, conditional=="FALSE"),
 ger.sum=aggregate(class~code, data=ger, FUN=sum) #suma germinadas por clavo
 colnames(ger.sum)=c("code","n.ger")
 ger2= merge(key,ger.sum, by="code", sort = TRUE)
-nrow(ger2) #967 clavos con germinación
+nrow(ger2) #967 clavos con germinaciÃ³n
 length(which(!duplicated(ger$code)=="TRUE"))  #Compruebe que coincide con base de datos ger (code no duplicados es 967)
 no.ger<-ger2$seeds-ger2$n.ger #calculo semillas no germinadas
 p.ger=ger2$n.ger/ger2$seeds #calculo proporcion gernminadas
@@ -334,7 +334,7 @@ nrow(ger2)
 ger3<-subset(ger2, subset= c(treat!="F4" & treat!= "F5" )) # Extraer tratamientos F4 y F5
 ger3<-droplevels(ger3) #Limpiar de la memoria de R los niveles que has eliminado con subset
 
-###########Crear y  Unir unacolumna con el tamaño de la madre.
+###########Crear y  Unir unacolumna con el tamaÃ±o de la madre.
 
 setwd('C:/Users/javim/Desktop/Silene ciliata gene flow')
 size<-read.table('Matriz _general_fenologia_2014.txt', header=T)
@@ -468,7 +468,7 @@ anova(ger.mod0, ger.mod1, ger.mod2,ger.mod3, ger.mod4)
 
 ##Check the prediction of the best model
 
-a=predict(ger.mod2,type="link") # Predices el valor para cada caso despues de transformarlo con la función de vinculo (logit para binomial)
+a=predict(ger.mod2,type="link") # Predices el valor para cada caso despues de transformarlo con la funciÃ³n de vinculo (logit para binomial)
 a=predict(ger.mod1,type="response")      # Predices el valor para cada caso sin transfomar
 
 par(mfrow=c(1,2))
@@ -531,8 +531,8 @@ options(na.action = "na.fail") #MuMIn
 
 ms<-dredge(ger.mod1,rank="AICc",extra = c("R^2", F = function(x) summary(x)$fstatistic[[1]]))
 # Generate a set of models with combinations (subsets) of terms in the global model
-# extra= c("R^2") calculate a coefficient of determination based on the likelihood-ratio test (R_LR²).
-plot(ms, xlab=c("dns","plt", "dns:plt")) # Gráfico útil para ver que variables salen significativas en cada modelo
+# extra= c("R^2") calculate a coefficient of determination based on the likelihood-ratio test (R_LRÂ²).
+plot(ms, xlab=c("dns","plt", "dns:plt")) # GrÃ¡fico Ãºtil para ver que variables salen significativas en cada modelo
 delta2=subset(ms, subset = delta < 7) #Te devuelve los modelos con delta < 2
 avg<-model.avg(delta2, subset = delta < 7)
 summary(avg) #Model averaging based on an information criterion
@@ -578,8 +578,8 @@ piecewiseSEM::sem.model.fits (ger.mod4.out)
 ###################################
 ######## 3.1 Data managing ########
 
-###Estimar número de plantulas vivas de T1 en t2 y t3, de T2 en t3 y t4, de T3 en T4 
-###utilizamos la agrupación previa de germinaciones nuevas por tiempo agrupadas en ger para calcular esto
+###Estimar nÃºmero de plantulas vivas de T1 en t2 y t3, de T2 en t3 y t4, de T3 en T4 
+###utilizamos la agrupaciÃ³n previa de germinaciones nuevas por tiempo agrupadas en ger para calcular esto
 
 #plantulas presentes a cada tiempo
 t1=subset(field3, time==1)
@@ -623,15 +623,15 @@ sup21=data.frame(g.t2, conditional.1=sup21.conditional)
 sup22.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
 sup22=data.frame(g.t2, conditional.2=sup22.conditional)
 
-gerT2.supT3<-subset(sup21, conditional.1=="TRUE") #seleccionamos germinadas en T1, vivas en T3
-gerT2.supT4<-subset(sup22, conditional.2=="TRUE") #seleccionamos germinadas en T1, vivas en T4
+gerT2.supT3<-subset(sup21, conditional.1=="TRUE") #seleccionamos germinadas en T2, vivas en T3
+gerT2.supT4<-subset(sup22, conditional.2=="TRUE") #seleccionamos germinadas en T2, vivas en T4
 
 #germinadas tiempo 3 
   #vivas en T4
 sup31.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
 sup31=data.frame(g.t2, conditional.1=sup31.conditional)
 
-gerT3.supT4<-subset(sup31, conditional.1=="TRUE") #seleccionamos germinadas en T1, vivas en T4
+gerT3.supT4<-subset(sup31, conditional.1=="TRUE") #seleccionamos germinadas en T3, vivas en T4
 
 
 #############de carlos##############
@@ -742,17 +742,17 @@ xlab = "Predicted probability of survival")
 field3<-subset(field3, code2!="B1_75_NA")
 size=aggregate(size~code2*pos, field3, FUN=max) #Data with NA
 size=aggregate(size~code3, field3, FUN=max) #hace lo mismo, ya que code3 ya contiene la posicion
-#tamaño de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
-#queremos obtener el tamaño maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
+#tamaÃ±o de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
+#queremos obtener el tamaÃ±o maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
 head(size) #mismo numero de obs que ger, tiene sentido, ger = numero de germinaciones total en todos los tiempos.
 size=merge(size,ger[,c(-11,-16)], by="code3")
-#unimos a ger para que tenga toda la información de cada caso, quitamos tamaño semillas en tiempo de su germinación
+#unimos a ger para que tenga toda la informaciÃ³n de cada caso, quitamos tamaÃ±o semillas en tiempo de su germinaciÃ³n
 #size=subset(size, c(blo!="B3" & blo!="B8"))
 size<-subset(size, subset= c(treat!="F4" & treat!= "F5" ))   #quitamos F4 y F5
 size<-droplevels(size)
 boxplot(size$size~size$treat, ylab="size (mm)")
 
-which(size$size==35) #Caso 1805 es un outlier.  Una planta muy grande que será un adulto o una planta rebrotada
+which(size$size==35) #Caso 1805 es un outlier.  Una planta muy grande que serÃ¡ un adulto o una planta rebrotada
 
 size<-size[-1806,] #eliminar u
 boxplot(size$size~size$treat, ylab="size (mm)")
@@ -801,7 +801,7 @@ segments(mp - 0.1, table.plot[7:9,3] + table.plot[7:9,4], mp + 0.1, table.plot[7
 
 #Mixed linear models (Gaussian Error)with log as link function
 
-#Optimizamos los términos fijos con REML = F (Ajustamos por MAximum likelihood)
+#Optimizamos los tÃ©rminos fijos con REML = F (Ajustamos por MAximum likelihood)
 size.mod0= lmer(log(size) ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
 size.mod1= lmer(log(size) ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
 size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
@@ -819,7 +819,7 @@ r.size.mod2=r.squaredGLMM(size.mod2)
 r.size.mod4=r.squaredGLMM(size.mod4)
  par(mfrow=c(1,2))
 qqnorm(resid(size.mod2))  #Un poco de heterocedasticidad
-plot(size.mod2)           #Asunción normalidad ligeramente violada
+plot(size.mod2)           #AsunciÃ³n normalidad ligeramente violada
 
 ##Vamos a probar que tal se comportan los modelos con link function = idendity (Sin transformar)
 
