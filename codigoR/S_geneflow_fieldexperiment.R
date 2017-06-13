@@ -1,15 +1,11 @@
 
 rm(list=ls())
 library(lme4)
-install.packages("doBy")
 library(doBy)
-install.packages("MuMIn")
 library(MuMIn)
-install.packages("lsmeans")
+options(na.action = "na.fail")
 library(lsmeans)
-install.packages("influence.ME")
 library(influence.ME)
-install.packages("multcomp")
 library(multcomp)
 
 #logit <- function(x){log(x/(1-x))} #link function logit.
@@ -20,7 +16,7 @@ library(multcomp)
 
 ##############################
 ######## 1.1 Raw data ########
-path<-"C:/Users/javim/Desktop/Silene ciliata gene flow/Silene-ciliata-gene-flow-master"
+path<-"C:/Users/javim/Desktop/Silene ciliata gene flow/Silene-ciliata-gene-flow-master" #Archivo original en https://github.com/javimorente/Silene-ciliata-gene-flow/tree/master/Data
 setwd(path)
 
 field=read.table("geneflow_field_experiment.txt", header=T, sep="\t")
@@ -293,9 +289,13 @@ field3=data.frame(code2,code3,field2)
 field3<-field3[!duplicated(field3$code3),]
 
 t1=subset(field3, time==1)
+droplevels(t1)
 t2=subset(field3, time==2)
+droplevels(t2)
 t3=subset(field3, time==3)
+droplevels(t3)
 t4=subset(field3, time==4)
+droplevels(t4)
 
 t1.conditional=t1[,1] %in% t2[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
 t1=data.frame(t1, conditional=t1.conditional)
@@ -367,7 +367,7 @@ str(size_madre_cleen)
 head(size_madre_cleen)
 #guardamos la tabla.
 write.table(size_madre_cleen, file='size_madre_cleened.txt', col.names = TRUE)
-size_madre <- read.table("size_madre_cleened.txt", header = T)
+size_madre <- read.table("size_madre_cleened.txt", header = T, dec=",")
 
 names(size_madre)[1]<-paste("mother")#renombramos igual a la columna para que se entiendan.
 head(size_madre)
@@ -405,7 +405,7 @@ boxplot(p.ger~treat, data=ger3, main="Germination", ylab= " Proportion of germin
 table.plot=summaryBy(p.ger ~ treat, data = ger3,
    FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
 
-par(mfrow=c(1,1))
+#par(mfrow=c(1,1))
 mp <- barplot(table.plot[1:3,2], axes=FALSE, axisnames=FALSE,ylim=c(0,0.4),  col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Germination", xlab="Treatment", ylab="Proportion of germination")
 axis(1, labels=c("F1", "F2","F3"), at = mp)   #Eje horizontal
 axis(2, at=seq(0 , 0.4, by=0.1))      #Eje vertical
@@ -446,13 +446,19 @@ segments(mp - 0.1, table.plot[7:9,3] + table.plot[7:9,4], mp + 0.1, table.plot[7
 ###GLMMs
 
 matrix = cbind(ger3$n.ger, ger3$no.ger)   #Matriz exitos y fracasos para usarla de variable dependiente
-library(lme4)
 
 ger.mod1= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 summary(ger.mod1)
 anova(ger.mod1)
-car::Anova(ger.mod1)     #Obtener P-valores
+car::Anova(ger.mod1) 
 
+##Evaluar modelo complementary-log-log para "zero-inflated"
+ger.mod1.log= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial(link=cloglog),data = ger3)
+summary(ger.mod1.log)
+anova(ger.mod1.log)
+car::Anova(ger.mod1.log)     #Obtener P-valores
+
+##Modelos sin "zero inflated"
 ger.mod2= glmer(matrix ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 ger.mod3= glmer(matrix ~ treat +  (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 ger.mod4= glmer(matrix ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
@@ -483,7 +489,6 @@ hist(Res, xlab="residuals", main="ger.mod1")
 plot(ger3$treat, Res, xlab="density", ylab="residuals")
 abline(h=0)
 
-
 ###R2
 
 #MEjor usar la funcion   sem.model.fits del paquete "piecewiseSEM"
@@ -503,7 +508,6 @@ means.germination.n=lsmeans(ger.mod1, pairwise~treat, adjust="none")       #no a
 means.germination.t=lsmeans(ger.mod1, pairwise~treat, adjust="bonferroni")  #muy restrictivo
 means.germination.t=lsmeans(ger.mod1, pairwise~treat, adjust="fdr")       #poco restrictivo
 
-
 means.germination.t.int=lsmeans(ger.mod1, pairwise~treat | moun, adjust="fdr")
 means.germination.n.int=lsmeans(ger.mod1, pairwise~treat | moun, adjust="none")
 
@@ -518,16 +522,6 @@ plot( (lsmeans(ger.mod1, ~ treat )  )  , type = "response", level = .95,
 xlab = "Predicted probability of survival")
 
 
-##Outliers
-library(influence.ME)
-infl <- influence(ger.mod1,group="pop")
-#Calculate Cook's distance:
-cooks.distance(infl)
-#Plot Cook's distance:
-plot(infl, which = "cook")
-
-
-
 ####MuMIn
 
 library(MuMIn)
@@ -536,18 +530,49 @@ options(na.action = "na.fail") #MuMIn
 ###Aic selection
 
 ms<-dredge(ger.mod1,rank="AICc",extra = c("R^2", F = function(x) summary(x)$fstatistic[[1]]))
-# Te hace todos los modelos posibles y además te añade el estadistico R2
+# Generate a set of models with combinations (subsets) of terms in the global model
+# extra= c("R^2") calculate a coefficient of determination based on the likelihood-ratio test (R_LR²).
 plot(ms, xlab=c("dns","plt", "dns:plt")) # Gráfico útil para ver que variables salen significativas en cada modelo
-delta2=subset(ms, subset = delta < 2.2) #Te devuelve los modelos con delta < 2
-avg<-model.avg(ms, subset = delta < 2.2)
+delta2=subset(ms, subset = delta < 7) #Te devuelve los modelos con delta < 2
+avg<-model.avg(delta2, subset = delta < 7)
 summary(avg) #Model averaging based on an information criterion
 avg<-model.avg(ger.mod2,ger.mod4)
 predict.avg<-MuMIn:::predict.averaging(avg, type="response") #type="link" si quieres los valores transformados
 
 boxplot(predict.avg~ger3$trea)
 
+
+######Modelos eliminando outliers#####################
+######################################################
+
+#outliers are those observations that lie outside 1.5*IQR,
+
+par(mfrow=c(1,2))
+bp<-boxplot(n.ger~treat*moun, data=ger3, main="Germination", ylab= "Germination (n seedlings)", xlab="Treatment") 
+
+ ger3out<-subset(ger3, moun!="bej" | n.ger!=8)
+ ger3out<-subset(ger3out, moun!="gua" | n.ger!=10)
+ 
+ matrix = cbind(ger3out$n.ger, ger3out$no.ger)   #Matriz exitos y fracasos para usarla de variable dependiente
+ 
+ ger.mod1.out= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3out)
+ 
+ ms<-dredge(ger.mod1.out,rank="AICc",extra = c("R^2", F = function(x) summary(x)$fstatistic[[1]]))
+ delta2=subset(ms, subset = delta < 2) #Te devuelve los modelos con delta < 2
+summary(model.avg(ms, subset = delta < 2)) 
+
+bp<-boxplot(n.ger~treat, data=ger3out, main="Germination", ylab= "Germination (n seedlings)", xlab="Treatment") 
+
+###R2
+
+ ger.mod2.out= glmer(matrix ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3out)
+ ger.mod4.out= glmer(matrix ~moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3out)
+  
+piecewiseSEM::sem.model.fits (ger.mod2.out)
+piecewiseSEM::sem.model.fits (ger.mod4.out)
+
 ############################################################
-################# 3. Proportion of survival   ##############
+################# 3. Survival/Mortality analysis   ##############
 ############################################################
 
 ###################################
@@ -558,40 +583,59 @@ boxplot(predict.avg~ger3$trea)
 
 #plantulas presentes a cada tiempo
 t1=subset(field3, time==1)
+droplevels(t1)
 t2=subset(field3, time==2)
+droplevels(t2)
 t3=subset(field3, time==3)
+droplevels(t3)
 t4=subset(field3, time==4)
+droplevels(t4)
 #nuevas plantulas germinadas a cada tiempo
 g.t1=subset(ger, time==1)
+droplevels(g.t1)
 g.t2=subset(ger, time==2)
+droplevels(g.t2)
 g.t3=subset(ger, time==3)
+droplevels(g.t3)
 g.t4=subset(ger, time==4)
+droplevels(g.t4)
 
 #germinadas en el tiempo1
   #vivas en T2
 sup11.conditional=g.t1[,1] %in% t2[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup11=data.frame(g.t1, conditional=sup11.conditional)
+sup11=data.frame(g.t1, conditional.1=sup11.conditional)
   #vivas en T3
 sup12.conditional=g.t1[,1] %in% t3[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup12=data.frame(g.t1, conditional=sup12.conditional)
+sup12=data.frame(g.t1, conditional.2=sup12.conditional)
   #vivas en T4
 sup13.conditional=g.t1[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup13=data.frame(g.t1, conditional=sup13.conditional)
+sup13=data.frame(g.t1, conditional.3=sup13.conditional)
+#
+gerT1.supT2<-subset(sup11, conditional.1=="TRUE") #seleccionamos germinadas en T1, vivas en T2
+gerT1.supT3<-subset(sup12, conditional.2=="TRUE") #seleccionamos germinadas en T1, vivas en T3
+gerT1.supT4<-subset(sup13, conditional.3=="TRUE") #seleccionamos germinadas en T1, vivas en T4
 
 #germinadas en el tiempo2 
   #vivas en T3
 sup21.conditional=g.t2[,1] %in% t3[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup21=data.frame(g.t2, conditional=sup21.conditional)
+sup21=data.frame(g.t2, conditional.1=sup21.conditional)
   #vivas en T4
 sup22.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup22=data.frame(g.t2, conditional=sup22.conditional)
+sup22=data.frame(g.t2, conditional.2=sup22.conditional)
+
+gerT2.supT3<-subset(sup21, conditional.1=="TRUE") #seleccionamos germinadas en T1, vivas en T3
+gerT2.supT4<-subset(sup22, conditional.2=="TRUE") #seleccionamos germinadas en T1, vivas en T4
 
 #germinadas tiempo 3 
   #vivas en T4
 sup31.conditional=g.t2[,1] %in% t4[,1] #TRUE == germinado/vivo; FALSE == germinado/muerto
-sup31=data.frame(g.t2, conditional=sup31.conditional)
+sup31=data.frame(g.t2, conditional.1=sup31.conditional)
 
-#de carlos.
+gerT3.supT4<-subset(sup31, conditional.1=="TRUE") #seleccionamos germinadas en T1, vivas en T4
+
+
+#############de carlos##############
+
 #vivo=ifelse(t1$conditional=="TRUE",1,0)
 #t1=data.frame(t1,vivo)
 #ger.0= aggregate(class~code,t1,sum)
@@ -687,11 +731,6 @@ xlab = "Predicted probability of survival")
 plot( (lsmeans(surv.mod2, ~ treat )  )  , type = "response", level = .95,
 xlab = "Predicted probability of survival")
 
-##Post hoc Dunnet
-
-set.seed(20140123)
-dunnet.surv <- glht(surv.mod2, linfct=mcp(treat="Dunnett"))
-summary(dunnet.surv)
 
 ##################################################################
 ###################### 4. SIZE ###################################
@@ -699,18 +738,25 @@ summary(dunnet.surv)
 
 ###################################
 ######## 4.1 Data managing ########
-
-size=aggregate(size~code2*pos, field3, FUN=max) 
-size=aggregate(size~code2, field3, FUN=max) #hace lo mismo, ya que code2 ya contiene la posicion
+#quitamos NA's
+field3<-subset(field3, code2!="B1_75_NA")
+size=aggregate(size~code2*pos, field3, FUN=max) #Data with NA
+size=aggregate(size~code3, field3, FUN=max) #hace lo mismo, ya que code3 ya contiene la posicion
 #tamaño de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
 #queremos obtener el tamaño maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
 head(size) #mismo numero de obs que ger, tiene sentido, ger = numero de germinaciones total en todos los tiempos.
-size=merge(size,ger([-11]), by="code2", all=FALSE)
+size=merge(size,ger[,c(-11,-16)], by="code3")
 #unimos a ger para que tenga toda la información de cada caso, quitamos tamaño semillas en tiempo de su germinación
 #size=subset(size, c(blo!="B3" & blo!="B8"))
-size=size[-17]
 size<-subset(size, subset= c(treat!="F4" & treat!= "F5" ))   #quitamos F4 y F5
+size<-droplevels(size)
 boxplot(size$size~size$treat, ylab="size (mm)")
+
+which(size$size==35) #Caso 1805 es un outlier.  Una planta muy grande que será un adulto o una planta rebrotada
+
+size<-size[-1806,] #eliminar u
+boxplot(size$size~size$treat, ylab="size (mm)")
+
 
 ###################################
 ######## 4.2 Plotting Size ########
@@ -718,69 +764,76 @@ boxplot(size$size~size$treat, ylab="size (mm)")
 table.plot=summaryBy(size ~ treat, data = size,
   FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
 
-par(mfrow=c(1,1))
-mp <- barplot(table.plot[1:5,2], axes=FALSE, axisnames=FALSE, ylim=c(0, 7), col=gray.colors(5, start = 0.1, end = 1, gamma = 2.2, alpha = NULL), main="Size (mm)", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1, labels=c("F1", "F2","F3", "F4","F5"), at = mp)
+mp <- barplot(table.plot[1:3,2], axes=FALSE, axisnames=FALSE, ylim=c(0, 6), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Size (mm)", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1, labels=c("F1", "F2","F3"), at = mp)
 axis(2, at=seq(0 , 7, by=1))
 
-segments(mp, table.plot[1:5,2], mp, table.plot[1:5,2] + table.plot[1:5,3], lwd=2)
-segments(mp - 0.1, table.plot[1:5,2] + table.plot[1:5,3], mp + 0.1, table.plot[1:5,2] + table.plot[1:5,3], lwd=2)
+segments(mp, table.plot[1:3,2], mp, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
+segments(mp - 0.1, table.plot[1:3,2] + table.plot[1:3,3], mp + 0.1, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
 
 ###Plot SIZE  treatment vs pop
 table.plot=summaryBy(size ~ moun*treat, data = size,
   FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
 par(mfrow=c(1,3))
-mp <- barplot(table.plot[1:5,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 1, gamma = 2.2, alpha = NULL), main="Bejar", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3", "F4","F5"),at = mp)
+mp <- barplot(table.plot[1:3,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Bejar", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
 axis(2, at=seq(0 , 9, by=1))
 
-segments(mp, table.plot[1:5,3], mp, table.plot[1:5,3] + table.plot[1:5,4], lwd=1)
-segments(mp - 0.1, table.plot[1:5,3] + table.plot[1:5,4], mp + 0.1, table.plot[1:5,3] + table.plot[1:5,4], lwd=1)
+segments(mp, table.plot[1:3,3], mp, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
+segments(mp - 0.1, table.plot[1:3,3] + table.plot[1:3,4], mp + 0.1, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
 
-
-mp <- barplot(table.plot[6:10,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 1, gamma = 2.2, alpha = NULL), main="Gredos", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3", "F4","F5"),at = mp)
+mp <- barplot(table.plot[4:6,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Gredos", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
 axis(2, at=seq(0 , 9, by=1))
 
-segments(mp, table.plot[6:10,3], mp, table.plot[6:10,3] + table.plot[6:10,4], lwd=1)
-segments(mp - 0.1, table.plot[6:10,3] + table.plot[6:10,4], mp + 0.1, table.plot[6:10,3] + table.plot[6:10,4], lwd=1)
+segments(mp, table.plot[4:6,3], mp, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
+segments(mp - 0.1, table.plot[4:6,3] + table.plot[4:6,4], mp + 0.1, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
 
-mp <- barplot(table.plot[11:15,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 1, gamma = 2.2, alpha = NULL), main="Guadarrama", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3", "F4","F5"),at = mp)
+mp <- barplot(table.plot[7:9,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end =0.9, gamma = 2.2, alpha = NULL), main="Guadarrama", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
 axis(2, at=seq(0 , 9, by=1))
 
-segments(mp, table.plot[11:15,3], mp, table.plot[11:15,3] + table.plot[11:15,4], lwd=1)
-segments(mp - 0.1, table.plot[11:15,3] + table.plot[11:15,4], mp + 0.1, table.plot[11:15,3] + table.plot[11:15,4], lwd=1)
+segments(mp, table.plot[7:9,3], mp, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
+segments(mp - 0.1, table.plot[7:9,3] + table.plot[7:9,4], mp + 0.1, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
 
 #################################
-######## 4.3 GLMM - Size ########
+######## 4.3 LMM - Size ########
 
-size.mod1= lmer(log(size) ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size)
-size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size)
-size.mod3= lmer(log(size) ~ treat +  (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size)
-size.mod4= lmer(log(size) ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size)
-size.mod0=lmer(log(size) ~ + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size)
+#Mixed linear models (Gaussian Error)with log as link function
 
+#Optimizamos los términos fijos con REML = F (Ajustamos por MAximum likelihood)
+size.mod0= lmer(log(size) ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod1= lmer(log(size) ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod3= lmer(log(size) ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
 
-###AIC
+AICc.size<-AICc(size.mod0, size.mod1, size.mod2, size.mod3,size.mod4)
+AICc.size[order(AICc.size$AICc),]
 
-anova(size.mod0, size.mod1, size.mod2,size.mod3, size.mod4)
+#Ajustamos los modelos finales mediante REML.
+size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
+size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
 
-###R2
-r.size.mod0=r.squaredGLMM(size.mod0)
-r.size.mod1=r.squaredGLMM(size.mod1)  
 r.size.mod2=r.squaredGLMM(size.mod2)
-r.size.mod3=r.squaredGLMM(size.mod3)
 r.size.mod4=r.squaredGLMM(size.mod4)
+ par(mfrow=c(1,2))
+qqnorm(resid(size.mod2))  #Un poco de heterocedasticidad
+plot(size.mod2)           #Asunción normalidad ligeramente violada
 
-###Posthoc lsmeans
+##Vamos a probar que tal se comportan los modelos con link function = idendity (Sin transformar)
 
-means.size.t=lsmeans(size.mod2, pairwise~treat, adjust="fdr")
-means.size.n=lsmeans(size.mod2, pairwise~treat, adjust="none")
+size.iden.mod0= lmer(size ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod1= lmer(size ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod2= lmer(size ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod3= lmer(size ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod4= lmer(size ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
 
-####Posthoc dunnet
+AICc.size.iden<-AICc(size.iden.mod0, size.iden.mod1, size.iden.mod2, size.iden.mod3,size.iden.mod4)
+AICc.size.iden[order(AICc.size.iden$AICc),]
+
+par(mfrow=c(1,2))
+qqnorm(resid(size.iden.mod2))  #Los residuos son peores nos quedamos con los modelos anteiores.
+plot(size.iden.mod2)
 
 
-set.seed(20140123)
-dunnet.size <- glht(size.mod2, linfct=mcp(treat="Dunnett"))
-summary(dunnet.size)
