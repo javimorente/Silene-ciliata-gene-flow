@@ -37,9 +37,8 @@ field=4822, field2=4713
 
 ATENCION!!!!!!!!!!
 DETECTAMOS DUPLICADOS DE SEMILLAS CON MISMA POSICION, DENTRO DEL MISMO CLAVO, EL EL MISMO BLOQUE Y EN EL MISMO TIEMPO.
-MIRAMOS LOS DATOS Y LAS MEDIDAS SON IGUALES. ASUMIMOS FALLO AL PASAR LOS DATOS.
-NOS QUEDAMOS CON UN DATO DE CADA PAREJA DE DUPLICADOS.
-NOS QUEDAMOS SOLO CON UNO DE LOS DOS CON LA FUNCION 'duplicate' que selecciona uno al azar (quitamos 51)
+MIRAMOS LOS DATOS Y LAS MEDIDAS SON IGUALES. ASUMIMOS FALLO AL PASAR LOS DATOS O MEDIR REPETIDAS VECES EN CAMPO.
+NOS QUEDAMOS CON UN DATO DE CADA PAREJA DE DUPLICADOS. NOS QUEDAMOS SOLO CON UNO DE LOS DOS CON LA FUNCION 'duplicate' que selecciona uno al azar (quitamos 51)
 field2=4713, field3=4662
 field3:     code2 es bloque_clavo_posicion 
             code3 es bloque_clavo_posicion_tiempo
@@ -59,12 +58,12 @@ Creamos ger3 quitando los tratamientos F4 y F5 por el momento del análisis.
 #################### mirar si hay algun bloque que sería mejor quitar porque pasaron catastrofes (Bloque3 y Bloque8... de guadarrama)
 #################### ya hemos quitado algunos (dos de ses y otros dos de cam). No se si compensa porque en todos germina algo....
 New variables
-#################### crear covariable de tabaño de la madre
-#################### crear base de datos con tamaño máximo que alcanza cada plantula
-#################### crear base de datos de supervivencia y/o mortalidad.
+#################### crear covariable de tabaño de la madre (HECHO)
+#################### crear base de datos con tamaño máximo que alcanza cada plantula (HECHO)
+#################### crear base de datos de supervivencia y/o mortalidad para hacer análisis de curvas de supervivencia (HECHO).
 
-Creamos ger4 que en como ger3 con una columna extra referida al tamaño de la madre
-Base de datos size contiene el tamaño maximo de cada plantula germinada. La creamos a partir de field3. 
+Creamos ger4 que en como ger3 con una columna extra referida al tamaño de la madre.
+Base de datos size contiene el tamaño maximo de cada plantula germinada. La creamos a partir de field3 que recoge la información de cada plántula germinada. 
             Mismo numero de casos que ger2 ya que solo tenemos en cuenta un valor de tamaño por cada tiempo. Quitamos F4 y F5.
-Se h creado una base de datos de supervivencia con la comparación de plántulas vivas a diferentes tiempos. 
+Se ha creado una base de datos de supervivencia con la comparación de plántulas vivas a diferentes tiempos. 
 Comparamos las germinadas en T1 si siguen vivas en T2, T3 y T4. Así sucesibamente para T2 y T3.
