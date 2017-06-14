@@ -6,8 +6,8 @@ Esta información individualizada, limpia y codificada por poblacioón, madre/pa
 2. Datos germinación campo (2015).
 Base de datos bruta (seguimiento_verano_2015_carlos_javi.xls y geneflow_field_experiment.txt). Los datos totales han de tener 4 censos.
 Base de datos de el munero de clavo identificando el tipo de cruce, madre/padre, bloque y numero de semillas en cada clavo (datos_germinacion_clavocampo.xls y tambien geneflow_field_experiment_KEY.txt).
-Con el script de R que creo Carlos (S_geneflow_field_experiment.R) se tratan los datos para que estén individualizados y con código de cruce.
-
+Con el script de R que creo Carlos (S_geneflow_field_experiment.R).
+En el futuro se podría tratar los datos para que estén individualizados y con código de cruce al igual que los datos de cámara. Para este análisis no se ha relaizado.
 
 #PREPARACION DATOS (S_geneflow_fieldexperiment.R):
 1. Juntar info clavo (key) con info campo.
@@ -53,7 +53,8 @@ ger2 = 967 clavos con germinacion a lo largo de la temporada
 calculamos con el numero de semillas inicial (info columnas seeds, ger2) el numero de semillas no germinadas 
 y creamos una nueva columna con esta info (no.ger)
 calculamos tambien la proporcion de semillas germinadas (p.ger)
-Creamos ger3 quitando los tratamientos F4 y F5 por el momento del análisis.
+Creamos ger3 incluyendo p.ger y quitando los tratamientos F4 y F5 por el momento del análisis. 
+ger=586 clavos con información.
 
 #################### mirar si hay algun bloque que sería mejor quitar porque pasaron catastrofes (Bloque3 y Bloque8... de guadarrama)
 #################### ya hemos quitado algunos (dos de ses y otros dos de cam). No se si compensa porque en todos germina algo....
@@ -67,3 +68,9 @@ Base de datos size contiene el tamaño maximo de cada plantula germinada. La cre
             Mismo numero de casos que ger2 ya que solo tenemos en cuenta un valor de tamaño por cada tiempo. Quitamos F4 y F5.
 Se ha creado una base de datos de supervivencia con la comparación de plántulas vivas a diferentes tiempos. 
 Comparamos las germinadas en T1 si siguen vivas en T2, T3 y T4. Así sucesibamente para T2 y T3.
+
+3. Analisis de datos realizados en este script.
+Modelos con variable proponci'on germinaci'on
+Modelos con variable tamaño máximo de plantula
+Curvas de supervivencia Kaplan-Meier (aun muy preliminar)
+
