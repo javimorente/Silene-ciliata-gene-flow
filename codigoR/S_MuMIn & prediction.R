@@ -1,6 +1,8 @@
-#Es un script para hacer un modelo sencillo en el que el area de la planta depnde de la altura de la población (Variable "plot":bajo/alto) y de la densidad de indivduos alrededor (variable continua, sería como tu peso de semilla)          
 
-       
+#Es un script para hacer un modelo sencillo en el que el area de la planta depnde de la altura de la población (Variable "plot":bajo/alto) 
+#y de la densidad de indivduos alrededor (variable continua, sería como tu peso de semilla)          
+
+####en S_geneflow_fieldexperiment.R hay una parte con esta aplicación ya implementada!!
                 
 library(MuMIn)
 options(na.action = "na.fail") #MuMIn

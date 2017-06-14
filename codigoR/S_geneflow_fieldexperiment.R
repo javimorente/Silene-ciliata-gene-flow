@@ -16,7 +16,8 @@ library(multcomp)
 
 ##############################
 ######## 1.1 Raw data ########
-path<-"C:/Users/carlos/Documents/analisisR/adapta" #Archivo original en https://github.com/javimorente/Silene-ciliata-gene-flow/tree/master/Data
+path<-"C:/Users/javim/Desktop/Silene ciliata gene flow/Copias seguridad GitHub/Silene-ciliata-gene-flow-master/Data" 
+#Archivo original en https://github.com/javimorente/Silene-ciliata-gene-flow/tree/master/Data
 setwd(path)
 
 field=read.table("geneflow_field_experiment.txt", header=T, sep="\t")
@@ -332,7 +333,6 @@ ger3<-droplevels(ger3) #Limpiar de la memoria de R los niveles que has eliminado
 
 ###########Crear y  Unir unacolumna con el tamaño de la madre.
 
-setwd('C:/Users/javim/Desktop/Silene ciliata gene flow')
 size<-read.table('Matriz _general_fenologia_2014.txt', header=T)
 tail(size)
 head(size)
@@ -370,8 +370,8 @@ head(size_madre)
 head(ger3)
 
 ger4= merge(ger3,size_madre, by="mother", all.x = T)
-head(ger4[,(13:15)]) 
-ger4=(ger4[,-(13:15)]) #quitamos columnas que no necesitamos. ger4 = ger3 pero con size
+head(ger4) 
+head(ger3)#comparar con ger3
 
 #######################################################################################################################
 #####Distribution of data within populations
@@ -446,6 +446,7 @@ matrix = cbind(ger3$n.ger, ger3$no.ger)   #Matriz exitos y fracasos para usarla 
 ger.mod1= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 summary(ger.mod1)
 anova(ger.mod1)
+#install.packages('car')
 car::Anova(ger.mod1) 
 
 ##Evaluar modelo complementary-log-log para "zero-inflated"
@@ -453,14 +454,20 @@ ger.mod1.log= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun
 summary(ger.mod1.log)
 anova(ger.mod1.log)
 car::Anova(ger.mod1.log)     #Obtener P-valores
+#modelos raros, todo significativo y Std. Error iguales.
 
 ##Modelos sin "zero inflated"
-ger.mod2= glmer(matrix ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
+ger.mod1= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3) #waring message: no convergen
+#hecho arriba
+ger.mod2= glmer(matrix ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3) #waring message: no convergen
 ger.mod3= glmer(matrix ~ treat +  (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 ger.mod4= glmer(matrix ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 ger.mod0= glmer(matrix ~ + (1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3)
 
-anova(ger.mod0, ger.mod1, ger.mod2,ger.mod3, ger.mod4)
+anova(ger.mod0, ger.mod1, ger.mod2,ger.mod3, ger.mod4) 
+#AIC, select models 2 and 4
+#ojo, mas abajo se quitan outlayers
+#Intentar primero optimizar aleatorios, decidir estructura de aleatorios y luego optimizar efectos fijos
 
 ##Check the prediction of the best model
 
@@ -487,8 +494,9 @@ abline(h=0)
 
 ###R2
 
-#MEjor usar la funcion   sem.model.fits del paquete "piecewiseSEM"
-
+#Mejor usar la funcion   sem.model.fits del paquete "piecewiseSEM"
+install.packages("parwiceSEM")
+library(parwiceSEM)
 piecewiseSEM::sem.model.fits (ger.mod2)
 piecewiseSEM::sem.model.fits (ger.mod4)
 
@@ -532,10 +540,14 @@ plot(ms, xlab=c("dns","plt", "dns:plt")) # Gráfico útil para ver que variables s
 delta2=subset(ms, subset = delta < 7) #Te devuelve los modelos con delta < 2
 avg<-model.avg(delta2, subset = delta < 7)
 summary(avg) #Model averaging based on an information criterion
-avg<-model.avg(ger.mod2,ger.mod4)
+avg<-model.avg(ger.mod2,ger.mod4)#2 modelos seleccionados
 predict.avg<-MuMIn:::predict.averaging(avg, type="response") #type="link" si quieres los valores transformados
+#juntamos al data set una columna con las predicciones del modelo (predict.avg)
+ger3=cbind(ger3,predict.avg)
 
-boxplot(predict.avg~ger3$trea)
+boxplot(ger3$predict.avg~ger3$treat)
+boxplot(ger3$predict.avg~ger3$treat*ger3$moun)
+#intentar hacer un barplot.... Barras de herror?
 
 
 ######Modelos eliminando outliers#####################
@@ -553,7 +565,8 @@ bp<-boxplot(n.ger~treat*moun, data=ger3, main="Germination", ylab= "Germination 
  
  ger.mod1.out= glmer(matrix ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother), family=binomial,data = ger3out)
  
- ms<-dredge(ger.mod1.out,rank="AICc",extra = c("R^2", F = function(x) summary(x)$fstatistic[[1]]))
+ 
+ ms<-dredge(ger.mod1.out,rank="AICc",extra = c("R^2", F = function(x) summary(x)$fstatistic[[1]])) #select models mod2 y mod4 (mont & mont+treat)
  delta2=subset(ms, subset = delta < 2) #Te devuelve los modelos con delta < 2
 summary(model.avg(ms, subset = delta < 2)) 
 
@@ -567,15 +580,120 @@ bp<-boxplot(n.ger~treat, data=ger3out, main="Germination", ylab= "Germination (n
 piecewiseSEM::sem.model.fits (ger.mod2.out)
 piecewiseSEM::sem.model.fits (ger.mod4.out)
 
-############################################################
-################# 3. Proportion of survival   ##############
-############################################################
-############################################################
-################# 3. Proportion of survival   ##############
-############################################################
+################################3hacer modelos optimizando efectos aleatorios y despues optimizado los fijos.
+
+##################################################################
+###################### 3. SIZE ###################################
+##################################################################
 
 ###################################
 ######## 3.1 Data managing ########
+
+#quitamos NA's
+field3<-subset(field3, code2!="B1_75_NA")
+size=aggregate(size~code2*pos, field3, FUN=max) #Data with NA
+size=aggregate(size~code3, field3, FUN=max) #hace lo mismo, ya que code3 ya contiene la posicion
+#tamaño de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
+#queremos obtener el tamaño maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
+head(size) #mismo numero de obs que ger, tiene sentido, ger = numero de germinaciones total en todos los tiempos.
+size=merge(size,ger[,c(-11,-16)], by="code3")
+#unimos a ger para que tenga toda la información de cada caso, quitamos tamaño semillas en tiempo de su germinación
+#size=subset(size, c(blo!="B3" & blo!="B8"))
+size<-subset(size, subset= c(treat!="F4" & treat!= "F5" ))   #quitamos F4 y F5
+size<-droplevels(size)
+boxplot(size$size~size$treat, ylab="size (mm)")
+
+which(size$size==35) #Caso 1805 es un outlier.  Una planta muy grande que será un adulto o una planta rebrotada
+
+size<-size[-1806,] #eliminar u
+boxplot(size$size~size$treat, ylab="size (mm)")
+
+
+###################################
+######## 3.2 Plotting Size ########
+
+table.plot=summaryBy(size ~ treat, data = size,
+                     FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
+
+mp <- barplot(table.plot[1:3,2], axes=FALSE, axisnames=FALSE, ylim=c(0, 6), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Size (mm)", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1, labels=c("F1", "F2","F3"), at = mp)
+axis(2, at=seq(0 , 7, by=1))
+
+segments(mp, table.plot[1:3,2], mp, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
+segments(mp - 0.1, table.plot[1:3,2] + table.plot[1:3,3], mp + 0.1, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
+
+###Plot SIZE  treatment vs pop
+table.plot=summaryBy(size ~ moun*treat, data = size,
+                     FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
+par(mfrow=c(1,3))
+mp <- barplot(table.plot[1:3,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Bejar", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
+axis(2, at=seq(0 , 9, by=1))
+
+segments(mp, table.plot[1:3,3], mp, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
+segments(mp - 0.1, table.plot[1:3,3] + table.plot[1:3,4], mp + 0.1, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
+
+mp <- barplot(table.plot[4:6,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Gredos", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
+axis(2, at=seq(0 , 9, by=1))
+
+segments(mp, table.plot[4:6,3], mp, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
+segments(mp - 0.1, table.plot[4:6,3] + table.plot[4:6,4], mp + 0.1, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
+
+mp <- barplot(table.plot[7:9,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end =0.9, gamma = 2.2, alpha = NULL), main="Guadarrama", xlab="Treatment", ylab="Rosette Diameter (mm)")
+axis(1,labels=c("F1", "F2","F3"),at = mp)
+axis(2, at=seq(0 , 9, by=1))
+
+segments(mp, table.plot[7:9,3], mp, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
+segments(mp - 0.1, table.plot[7:9,3] + table.plot[7:9,4], mp + 0.1, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
+
+#################################
+######## 3.3 LMM - Size ########
+
+#Mixed linear models (Gaussian Error)with log as link function
+
+#Optimizamos los términos fijos con REML = F (Ajustamos por MAximum likelihood)
+size.mod0= lmer(log(size) ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod1= lmer(log(size) ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod3= lmer(log(size) ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+
+AICc.size<-AICc(size.mod0, size.mod1, size.mod2, size.mod3,size.mod4)
+AICc.size[order(AICc.size$AICc),]
+
+#Ajustamos los modelos finales mediante REML.
+size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
+size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
+
+r.size.mod2=r.squaredGLMM(size.mod2)
+r.size.mod4=r.squaredGLMM(size.mod4)
+par(mfrow=c(1,2))
+qqnorm(resid(size.mod2))  #Un poco de heterocedasticidad
+plot(size.mod2)           #Asunción normalidad ligeramente violada
+
+##Vamos a probar que tal se comportan los modelos con link function = idendity (Sin transformar)
+
+size.iden.mod0= lmer(size ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod1= lmer(size ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod2= lmer(size ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod3= lmer(size ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+size.iden.mod4= lmer(size ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
+
+AICc.size.iden<-AICc(size.iden.mod0, size.iden.mod1, size.iden.mod2, size.iden.mod3,size.iden.mod4)
+AICc.size.iden[order(AICc.size.iden$AICc),]
+
+par(mfrow=c(1,2))
+qqnorm(resid(size.iden.mod2))  #Los residuos son peores nos quedamos con los modelos anteiores.
+plot(size.iden.mod2)
+
+
+############################################################
+################# 4. Proportion of survival   ##############
+############################################################
+
+###################################
+######## 4.1 Data managing ########
 
 library(survival)
 library(survminer)
@@ -638,7 +756,7 @@ surviv2<-subset(surviv, subset= c(treat!="F4" & treat!= "F5" )) # Extraer tratam
 surviv2<-droplevels(surviv2) #Limpiar de la memoria de R los niveles que has eliminado con subset
 
 ###############################################################
-####3.2 The Kaplan-Meier estimate of the survival function####
+####4.2 The Kaplan-Meier estimate of the survival function####
 
 ##### Interaccion montaña y tratamiento en un modelo #######
 
@@ -734,7 +852,8 @@ survdiff(Surv(surviv2$time2, surviv2$binomial) ~ surviv2$treat, rho=0)
   
   #The test statistic is given by X2 = Z0ˆ-1Z, which, under the null hypothesis, is distributed as a X2 distribution with n degrees of freedom.
 
-##########An accelerated failure-time (AFT) model##########
+##############################################################
+##########4.3 An accelerated failure-time (AFT) model##########
 
 # The function survreg() is used for AFT modeling. 
 # The argument dist has several options (’weibull’, ’exponential’, ’gaussian’, ’logistic’, ’lognormal’, and ’loglogistic’) and is the parametric model used.
@@ -762,108 +881,5 @@ aft.log<- survreg(Surv(surviv2$time2, surviv2$binomial) ~ surviv2$treat, dist="l
  summary(aft.logg)
  anova(aft.logg)
 
-##################################################################
-###################### 4. SIZE ###################################
-##################################################################
-
-###################################
-######## 4.1 Data managing ########
-#quitamos NA's
-field3<-subset(field3, code2!="B1_75_NA")
-size=aggregate(size~code2*pos, field3, FUN=max) #Data with NA
-size=aggregate(size~code3, field3, FUN=max) #hace lo mismo, ya que code3 ya contiene la posicion
-#tamaño de cada plantula en base de datos "field3", limpia de duplicados (4662 plantulas en todos los tiempos).
-#queremos obtener el tamaño maximo de cada plantula buscando en todos los tiempos (code 2 repetidos).
-head(size) #mismo numero de obs que ger, tiene sentido, ger = numero de germinaciones total en todos los tiempos.
-size=merge(size,ger[,c(-11,-16)], by="code3")
-#unimos a ger para que tenga toda la información de cada caso, quitamos tamaño semillas en tiempo de su germinación
-#size=subset(size, c(blo!="B3" & blo!="B8"))
-size<-subset(size, subset= c(treat!="F4" & treat!= "F5" ))   #quitamos F4 y F5
-size<-droplevels(size)
-boxplot(size$size~size$treat, ylab="size (mm)")
-
-which(size$size==35) #Caso 1805 es un outlier.  Una planta muy grande que será un adulto o una planta rebrotada
-
-size<-size[-1806,] #eliminar u
-boxplot(size$size~size$treat, ylab="size (mm)")
-
-
-###################################
-######## 4.2 Plotting Size ########
-
-table.plot=summaryBy(size ~ treat, data = size,
-  FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
-
-mp <- barplot(table.plot[1:3,2], axes=FALSE, axisnames=FALSE, ylim=c(0, 6), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Size (mm)", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1, labels=c("F1", "F2","F3"), at = mp)
-axis(2, at=seq(0 , 7, by=1))
-
-segments(mp, table.plot[1:3,2], mp, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
-segments(mp - 0.1, table.plot[1:3,2] + table.plot[1:3,3], mp + 0.1, table.plot[1:3,2] + table.plot[1:3,3], lwd=2)
-
-###Plot SIZE  treatment vs pop
-table.plot=summaryBy(size ~ moun*treat, data = size,
-  FUN = function(x) { c(m = mean(x), se= sd(x)/sqrt(length(x)),s = sd(x)) } )
-par(mfrow=c(1,3))
-mp <- barplot(table.plot[1:3,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(3, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Bejar", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3"),at = mp)
-axis(2, at=seq(0 , 9, by=1))
-
-segments(mp, table.plot[1:3,3], mp, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
-segments(mp - 0.1, table.plot[1:3,3] + table.plot[1:3,4], mp + 0.1, table.plot[1:3,3] + table.plot[1:3,4], lwd=1)
-
-mp <- barplot(table.plot[4:6,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end = 0.9, gamma = 2.2, alpha = NULL), main="Gredos", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3"),at = mp)
-axis(2, at=seq(0 , 9, by=1))
-
-segments(mp, table.plot[4:6,3], mp, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
-segments(mp - 0.1, table.plot[4:6,3] + table.plot[4:6,4], mp + 0.1, table.plot[4:6,3] + table.plot[4:6,4], lwd=1)
-
-mp <- barplot(table.plot[7:9,3], axes=FALSE, axisnames=FALSE, ylim=c(0, 9), col=gray.colors(5, start = 0.1, end =0.9, gamma = 2.2, alpha = NULL), main="Guadarrama", xlab="Treatment", ylab="Rosette Diameter (mm)")
-axis(1,labels=c("F1", "F2","F3"),at = mp)
-axis(2, at=seq(0 , 9, by=1))
-
-segments(mp, table.plot[7:9,3], mp, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
-segments(mp - 0.1, table.plot[7:9,3] + table.plot[7:9,4], mp + 0.1, table.plot[7:9,3] + table.plot[7:9,4], lwd=1)
-
-#################################
-######## 4.3 LMM - Size ########
-
-#Mixed linear models (Gaussian Error)with log as link function
-
-#Optimizamos los términos fijos con REML = F (Ajustamos por MAximum likelihood)
-size.mod0= lmer(log(size) ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.mod1= lmer(log(size) ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.mod3= lmer(log(size) ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-
-AICc.size<-AICc(size.mod0, size.mod1, size.mod2, size.mod3,size.mod4)
-AICc.size[order(AICc.size$AICc),]
-
-#Ajustamos los modelos finales mediante REML.
-size.mod2= lmer(log(size) ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
-size.mod4= lmer(log(size) ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=T)
-
-r.size.mod2=r.squaredGLMM(size.mod2)
-r.size.mod4=r.squaredGLMM(size.mod4)
- par(mfrow=c(1,2))
-qqnorm(resid(size.mod2))  #Un poco de heterocedasticidad
-plot(size.mod2)           #Asunción normalidad ligeramente violada
-
-##Vamos a probar que tal se comportan los modelos con link function = idendity (Sin transformar)
-
-size.iden.mod0= lmer(size ~ 1 + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.iden.mod1= lmer(size ~ treat*moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.iden.mod2= lmer(size ~ treat+moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.iden.mod3= lmer(size ~ moun + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-size.iden.mod4= lmer(size ~ treat + (1|moun:pop)+(1|moun:pop:blo)+ (1|moun:pop:blo:mother),data = size, REML=F)
-
-AICc.size.iden<-AICc(size.iden.mod0, size.iden.mod1, size.iden.mod2, size.iden.mod3,size.iden.mod4)
-AICc.size.iden[order(AICc.size.iden$AICc),]
-
-par(mfrow=c(1,2))
-qqnorm(resid(size.iden.mod2))  #Los residuos son peores nos quedamos con los modelos anteiores.
-plot(size.iden.mod2)
 
 
