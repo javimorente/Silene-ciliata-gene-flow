@@ -16,7 +16,7 @@ library(multcomp)
 
 ##############################
 ######## 1.1 Raw data ########
-path<-"C:/Users/javim/Desktop/Silene ciliata gene flow/Copias seguridad GitHub/Silene-ciliata-gene-flow-master/Data" 
+path<-"D:/Proyecto_AdAptA/Gene Flow Silene (Mallorca)/Silene-ciliata-gene-flow-master/Data" 
 #Archivo original en https://github.com/javimorente/Silene-ciliata-gene-flow/tree/master/Data
 setwd(path)
 
@@ -26,15 +26,22 @@ str(field)
 field<-field[,1:8]
 key=read.table("geneflow_field_experiment_KEY.txt", header=T, sep="\t")
 str(key)
+str(field)
+#fila with NA´s, I found it looking at the levels of each factor ("")
+field <- field[-4758, ]  
+
 #################################################
 ######## 1.2 Variable code (block & nail) ########
 
 code=paste(key$blo,key$nail, sep = "_")
 key<-cbind(key,code)
-key<-key[!(duplicated(key$code)| duplicated(key$code, fromLast=TRUE)) ,] #26 casos duplicados error toma datos clavo. Cuando se resuelva borrar esta línea de codigo 
-           
-code=paste(field$blo,field$nail, sep = "_")
-field=data.frame(code,field)
+
+duplicated(key$code)
+key[duplicated(key$code), ]
+duplicates_KEY <- as.data.frame(key[duplicated(key$code), ])
+#write.table(duplicates_KEY, file="duplicates_KEY.txt")
+#key<-key[!(duplicated(key$code)| duplicated(key$code, fromLast=TRUE)) ,] #26 casos duplicados error toma datos clavo. Cuando se resuelva borrar esta línea de codigo 
+
 
 ##########################################
 ######### 1.3 Variable treatment ########
@@ -54,7 +61,7 @@ vec=rep("F2", nrow(naj.F))
 naj.F2=data.frame(naj.F,treat=vec)
 
 #F3
-naj.F <- naj[grep("peñ", naj$father), ]
+naj.F <- naj[grep("pen", naj$father), ]
 vec=rep("F3", nrow(naj.F))
 naj.F3=data.frame(naj.F,treat=vec)
 
@@ -88,7 +95,7 @@ vec=rep("F2", nrow(mor.F))
 mor.F2=data.frame(mor.F,treat=vec)
 
 #F3
-mor.F <- mor[grep("peñ", mor$father), ]
+mor.F <- mor[grep("pen", mor$father), ]
 vec=rep("F3", nrow(mor.F))
 mor.F3=data.frame(mor.F,treat=vec)
 
@@ -135,7 +142,7 @@ vec=rep("F4", nrow(rui.F))
 rui.F4=data.frame(rui.F,treat=vec)
 
 #F5
-rui.F <- rui[grep("peñ", rui$father), ] 
+rui.F <- rui[grep("pen", rui$father), ] 
                
 vec=rep("F5", nrow(rui.F))
 rui.F5=data.frame(rui.F,treat=vec)
@@ -170,7 +177,7 @@ agi.F4=data.frame(agi.F,treat=vec)
 
 #F5
 agi.F <- rbind ( 
-    (agi[grep("peñ", agi$father), ]), (agi[grep("zon", agi$father), ]) 
+    (agi[grep("pen", agi$father), ]), (agi[grep("zon", agi$father), ]) 
                 )
                
 vec=rep("F5", nrow(agi.F))
@@ -205,7 +212,7 @@ vec=rep("F4", nrow(ses.F))
 ses.F4=data.frame(ses.F,treat=vec)
 
 #F5
-ses.F <- ses[grep("peñ", ses$father), ] 
+ses.F <- ses[grep("pen", ses$father), ] 
                
 vec=rep("F5", nrow(ses.F))
 ses.F5=data.frame(ses.F,treat=vec)
@@ -239,7 +246,7 @@ vec=rep("F4", nrow(cam.F))
 cam.F4=data.frame(cam.F,treat=vec)
 
 #F5
-cam.F <- cam[grep("peñ", cam$father), ] 
+cam.F <- cam[grep("pen", cam$father), ] 
                
 vec=rep("F5", nrow(cam.F))
 cam.F5=data.frame(cam.F,treat=vec)
@@ -247,7 +254,10 @@ cam.F5=data.frame(cam.F,treat=vec)
 cam2=rbind(cam.F1,cam.F2,cam.F3,cam.F4,cam.F5)
 
 
+
+
 key=rbind(naj2,mor2,rui2,agi2, ses2, cam2)
+
 moun= data.frame(
     ifelse(key$pop=="naj" | key$pop=="mor", "gua", 
               ifelse(key$pop=="ses" | key$pop=="cam", "gre", "bej")))
@@ -261,8 +271,29 @@ key=data.frame(key, moun)
 
 #####################################
 ########  2.1 Preparing data  #######
-  
+
+
+code=paste(field$blo,field$nail, sep = "_")
+field=data.frame(field, code)
+#write.table (field1, file = "field1.txt")
+
+#field2=merge(field, key, by="code")
 field2=merge(field, data.frame(code=key$code, mother=key$mother, father=key$father, seeds=key$seeds, treat= key$treat), by= "code", )
+field2<-droplevels(field2)
+#se pierde un caso, un NA
+
+#########################################SE PIERDEN 5 CASOSO!!!!
+#field.conditional=field$code %in% field2$code
+#field1<-data.frame(field, conditional=field.conditional)
+#field1False<-subset(field1, conditional <= FALSE)
+#field1False
+#key<-as.data.frame(key)
+#key1False<-subset(key, code == "B16_5")
+#no está en key.
+#Los he encontrado en los estadillos. No se debieron de pasar esos códigos.
+#modifico el original y lo subo también al GitHub
+##########################################
+
 
 #key2=subset(ger,select=c(code,moun,pop,mother,father,seeds,treat) )
 #key2=key2[!duplicated(key2), ]
