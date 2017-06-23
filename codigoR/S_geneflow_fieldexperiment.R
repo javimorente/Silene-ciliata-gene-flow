@@ -28,7 +28,8 @@ key=read.table("geneflow_field_experiment_KEY.txt", header=T, sep="\t")
 str(key)
 str(field)
 #fila with NA´s, I found it looking at the levels of each factor ("")
-field <- field[-4758, ]  
+field <- field[-4758, ] 
+field<-droplevels(field)
 
 #################################################
 ######## 1.2 Variable code (block & nail) ########
@@ -318,6 +319,7 @@ code2=paste(field2$code,field2$pos,sep="_") #bloque_clavo_posicion
 code3=paste(field2$code,field2$pos,field2$time,sep="_") #Bloque_clavo_posicion_tiempo
 
 field3=data.frame(code2,code3,field2)
+#duplicados código 3, relacionados con duplicados en la toma de datos o durante la digitalización d estadillos
 field3<-field3[!duplicated(field3$code3),]
 
 t1=subset(field3, time==1)
@@ -348,8 +350,8 @@ ger<-rbind(t1,subset(t2, conditional=="FALSE"),subset(t3, conditional=="FALSE"),
 ger.sum=aggregate(class~code, data=ger, FUN=sum) #suma germinadas por clavo
 colnames(ger.sum)=c("code","n.ger")
 ger2= merge(key,ger.sum, by="code", sort = TRUE)
-nrow(ger2) #967 clavos con germinación
-length(which(!duplicated(ger$code)=="TRUE"))  #Compruebe que coincide con base de datos ger (code no duplicados es 967)
+nrow(ger2) #988 clavos con germinación
+length(which(!duplicated(ger$code)=="TRUE"))  #Compruebe que coincide con base de datos ger (code no duplicados es 988)
 no.ger<-ger2$seeds-ger2$n.ger #calculo semillas no germinadas
 p.ger=ger2$n.ger/ger2$seeds #calculo proporcion gernminadas
 ger2=data.frame(ger2,no.ger,p.ger)
