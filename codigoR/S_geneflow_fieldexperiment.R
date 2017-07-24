@@ -1,11 +1,16 @@
 
 rm(list=ls())
 library(lme4)
+#install.packages("daBy")
 library(doBy)
+#install.packages("MuMIn")
 library(MuMIn)
 options(na.action = "na.fail")
+#install.packages("lsmeans")
 library(lsmeans)
+#install.packages("influence.ME")
 library(influence.ME)
+#install.packages("multcomp")
 library(multcomp)
 
 #logit <- function(x){log(x/(1-x))} #link function logit.
@@ -281,7 +286,6 @@ field=data.frame(field, code)
 #field2=merge(field, key, by="code")
 field2=merge(field, data.frame(code=key$code, mother=key$mother, father=key$father, seeds=key$seeds, treat= key$treat), by= "code", )
 field2<-droplevels(field2)
-#se pierde un caso, un NA
 
 #########################################SE PIERDEN 5 CASOSO!!!!
 #field.conditional=field$code %in% field2$code
@@ -358,11 +362,23 @@ ger2=data.frame(ger2,no.ger,p.ger)
 ger2<-droplevels(ger2)
 nrow(ger2)
 
-#ger2=subset(ger2, c(blo!="B3" | blo!="B8"))    #Eliminar bloque 3 y bloque 8
-#ger3<-subset(ger2, subset= c(treat=="F1" | treat== "F2" | treat=="F3"))   #Seleccionar tratamientos F1, F2, F3
+##############Quitamos bloques en los que se haya producido "desasres" y puedan meter ruido a los datos mas que aportar información.
+#Anteriormente ya se han quitado bloques de cam (2 por destrozo de cabras) 
+#                                         y ses (2 por movimiento del terreno) ambos con 0 germinación desde el principio.
 
-ger3<-subset(ger2, subset= c(treat!="F4" & treat!= "F5" )) # Extraer tratamientos F4 y F5
+#De agi germinó algo en todos aunque sea solo en el primero. Luego muerte pero por causas naturales...
+#De rui germinó algo en todos aunque sea solo en el primero. Luego muerte pero por causas naturales....
+
+#Bloque 3, morrena, cagada de vaca (censo 2º), en el censo 1º si que germinaron vastantes.
+#Bloque 8, najarra, hozadura de jabalí (censo 1º).
+
+ger3<-subset(ger2, subset= c(treat=="F1" | treat== "F2" | treat=="F3"))   #Seleccionar tratamientos F1, F2, F3
+ger3<-droplevels(ger3)
+ger3<-subset(ger2, subset= c(treat!="F4" & treat!= "F5" )) # Extraer tratamientos F4 y F5, lo mismo otra vez...
 ger3<-droplevels(ger3) #Limpiar de la memoria de R los niveles que has eliminado con subset
+
+ger3=subset(ger3, subset = c(!(blo=="B3" | blo=="B8")))    #Eliminar bloque 3 y bloque 8
+ger3<-droplevels(ger3)
 
 ###########Crear y  Unir unacolumna con el tamaño de la madre.
 
@@ -404,7 +420,8 @@ head(ger3)
 
 ger4= merge(ger3,size_madre, by="mother", all.x = T)
 head(ger4) 
-head(ger3)#comparar con ger3
+head(ger3)#comparar con ger3, asegurarse de que solo cambia el orden y no los valores de las columnas comunes.
+          #si no es necesario utilizar la columna de tamaño de la madre (ger4) trabajar en los análisis con ger3
 
 #######################################################################################################################
 #####Distribution of data within populations
@@ -525,7 +542,7 @@ hist(Res, xlab="residuals", main="ger.mod1")
 plot(ger3$treat, Res, xlab="density", ylab="residuals")
 abline(h=0)
 
-###R2
+### 
 
 #Mejor usar la funcion   sem.model.fits del paquete "piecewiseSEM"
 install.packages("parwiceSEM")
