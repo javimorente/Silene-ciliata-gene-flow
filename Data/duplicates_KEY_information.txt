@@ -1,0 +1,56 @@
+	nail	mother	father	seeds	pop	blo	code	code
+77	78	mor 72	mor 29	10	mor	B1	B1_78	B1_78
+	es el 76, el otro si q es el 78							
+95	96	mor 69	peñ 32	10	mor	B1	B1_96	B1_96
+125	25	rui 37	agi 6	8	rui	B10	B10_25	B10_25
+	no exsiste…. Quitamos este, dejamos el otro							
+216	17	rui 47	rui 12	8	rui	B11	B11_17	B11_17
+	ponemos 102 a este							
+234	34	rui 46	naj 55	10	rui	B11	B11_34	B11_34
+	le ponemos 101 a este							
+310	10	rui 43	agi 35	10	rui	B12	B12_10	B12_10
+511	10	agi 7	agi 8	10	agi	B14	B14_10	B14_10
+	el otro es el 100							
+546	47	agi 46	agi 25	8	agi	B14	B14_47	B14_47
+	es el 97							
+608	12	agi 6	naj 84	10	agi	B15	B15_12	B15_12
+	el otro es el 72							
+721	30	agi 36	peñ 17	8	agi	B16	B16_30	B16_30
+	el otro es el 20							
+751	62	agi 35	peñ 29	7	agi	B16	B16_62	B16_62
+	es el 61							
+761	71	agi 41	mor 78	10	agi	B16	B16_71	B16_71
+857	72	cam 82	zon 26	8	cam	B17	B17_72	B17_72
+	lio de numeros arreglado, afectaba a 3 numeros diferentes mas codificados							
+887	2	cam 68	peñ 32	10	cam	B18	B18_2	B18_2
+	el otro era un 5							
+893	8	cam 60	peñ 27	10	cam	B18	B18_8	B18_8
+	es un 80							
+894	8	cam 81	cam 82	10	cam	B18	B18_8	B18_8
+1074	91	ses 65	mor 62	10	ses	B19	B19_91	B19_91
+	es el 95, el otro si es el 96							
+1129	45	mor 78	peñ 8	10	mor	B2	B2_45	B2_45
+	repetido el clavo, renumeramos a 101							
+1328	46	mor 78	agi 39	10	mor	B3	B3_46	B3_46
+	el otro es el 49							
+1336	54	mor 81	rui 23	8	mor	B3	B3_54	B3_54
+	el otro es el 45							
+1356	73	mor 39	rui 37	10	mor	B3	B3_73	B3_73
+	el otro es el 37							
+1409	25	mor 81	naj 83	10	mor	B4	B4_25	B4_25
+1544	62	naj 48	rui 46	10	naj	B5	B5_62	B5_62
+	está duplicado, ponemos 101 en el otro							
+1601	18	naj 51	rui 39	10	naj	B6	B6_18	B6_18
+	este es el 81, lo cambiamos							
+1662	78	naj 80	rui 36	10	naj	B6	B6_78	B6_78
+	el otro es el 90							
+1742	59	rui 35	neg 25	10	rui	B9	B9_59	B9_59
+	corregido, el otro era clao 35							
+	repetido, cambiamos el otro por el 101							
+	es el 72, el otro está bien							
+	repe, ponemos a este 101							
+	repe, ponemos al otro 101							
+NUEVA REVISIÓN NOS DA UN NUEVO DUPLICADO								
+	79	mor 72	mor 29	10	mor	B1		
+78	79	mor 80	naj 83	10	mor	B1		
+	el primero es el 76, confusión al cambiarlo							

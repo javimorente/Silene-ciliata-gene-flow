@@ -1,0 +1,2 @@
+"nail" "mother" "father" "seeds" "pop" "blo" "code"
+"78" 79 "mor 80" "naj 83" 10 "mor" "B1" "B1_79"

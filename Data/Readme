@@ -74,24 +74,3 @@ Modelos con variable proponci'on germinaci'on
 Modelos con variable tamaño máximo de plantula
 Curvas de supervivencia Kaplan-Meier (aun muy preliminar)
 
-
-################################MADRID#######################
-Se ha hecho arqueología de datos para recuperar los duplicados que detectamos por fallos en la toma de datos de clavo en el campo.
-Para ello se ha comparado los estadillos de numero de clavos con los mapeados de los seguimientos de geminación. Se recuperaron todos.
-
-También se detectó un fallo a la hora de unir los datos de seguimiento de campo (field) con los datos de clavo (key). 
-Faltaban al menos 5 códigos que si que estaban en field y se perdian al juntarlos con key.
-Rebuscando se han encontrado en un estadillo no pasado a Excel. 
-Todoes estos cambios se han realizado en los originales y se han subido de nuevo al GitHub.
-
-
-
-
-
-
-
-
-
-
-
-
